@@ -1,0 +1,46 @@
+# Build outputs
+build/
+*.o
+*.a
+*.lib
+*.dll
+*.exe
+*.pdb
+*.ilk
+*.exp
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+CTestTestfile.cmake
+_deps/
+
+# VS Code (keep .vscode tracked since it has project config)
+.vscode/*.log
+
+# Output data (large files)
+output/*.csv
+
+# Dataset (large binary/CSV files - download separately)
+data/MH_01_easy/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+scripts/__pycache__/
+
+# Claude Code project settings (private)
+.claude/
+
+# Editor artifacts
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# MSYS2 / MinGW artifacts
+*.stackdump

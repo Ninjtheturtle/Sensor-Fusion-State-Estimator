@@ -1,0 +1,19 @@
+{
+  "cmake.configurePreset": "ucrt64-debug",
+  "cmake.buildPreset": "debug",
+  "cmake.testPreset": "test-debug",
+  "cmake.generator": "Ninja",
+  "cmake.cmakePath": "C:/msys64/ucrt64/bin/cmake.exe",
+  "C_Cpp.default.compilerPath": "C:/msys64/ucrt64/bin/g++.exe",
+  "C_Cpp.default.cppStandard": "c++17",
+  "C_Cpp.default.intelliSenseMode": "windows-gcc-x64",
+  "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
+  "editor.formatOnSave": true,
+  "files.associations": {
+    "*.hpp": "cpp",
+    "*.cpp": "cpp"
+  },
+  "terminal.integrated.env.windows": {
+    "PATH": "C:\\msys64\\ucrt64\\bin;${env:PATH}"
+  }
+}

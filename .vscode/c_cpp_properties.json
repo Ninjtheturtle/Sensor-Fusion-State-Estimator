@@ -1,0 +1,21 @@
+{
+  "configurations": [
+    {
+      "name": "UCRT64",
+      "compilerPath": "C:/msys64/ucrt64/bin/g++.exe",
+      "cppStandard": "c++17",
+      "intelliSenseMode": "windows-gcc-x64",
+      "includePath": [
+        "${workspaceFolder}/include",
+        "C:/msys64/ucrt64/include/eigen3",
+        "C:/msys64/ucrt64/include"
+      ],
+      "defines": [
+        "_USE_MATH_DEFINES",
+        "NOMINMAX",
+        "WIN32_LEAN_AND_MEAN"
+      ]
+    }
+  ],
+  "version": 4
+}
