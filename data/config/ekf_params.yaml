@@ -1,0 +1,42 @@
+# ekf_params.yaml
+# EuRoC MH_01_easy default parameters for the ESKF.
+# These are hard-coded in ESKFConfig (State.hpp) for now; this file
+# documents the values and their sources for reference.
+
+# ── IMU Noise (ADIS16448 MEMS, EuRoC dataset paper) ────────────────────────────
+imu:
+  # Accelerometer noise density [m/s^2/sqrt(Hz)]
+  sigma_acc_n:  2.0e-3
+  # Gyroscope noise density [rad/s/sqrt(Hz)]
+  sigma_gyro_n: 1.6e-4
+  # Accelerometer random walk [m/s^2 * sqrt(Hz)]
+  sigma_acc_rw: 3.0e-3
+  # Gyroscope random walk [rad/s * sqrt(Hz)]
+  sigma_gyro_rw: 1.9e-5
+
+# ── Simulated GPS (added to EuRoC ground truth positions) ──────────────────────
+gps:
+  sigma_xy: 0.05    # [m] horizontal noise std dev
+  sigma_z:  0.10    # [m] vertical noise std dev
+  rate_hz:  10.0    # [Hz] GPS update frequency
+
+# ── Simulated Odometry (added to EuRoC ground truth velocities) ────────────────
+odometry:
+  sigma: 0.05       # [m/s] velocity noise std dev (all axes)
+  rate_hz: 10.0     # [Hz] odometry update frequency
+
+# ── Outlier Rejection ──────────────────────────────────────────────────────────
+outlier_rejection:
+  # Mahalanobis chi-squared threshold for 3 DOF measurements at 95% confidence
+  # chi^2(3, alpha=0.05) = 7.815
+  chi2_gps_threshold:  7.815
+  chi2_odom_threshold: 7.815
+
+# ── Initial Covariance ─────────────────────────────────────────────────────────
+# (Diagonal elements; representing 1-sigma uncertainty at initialization)
+initial_covariance:
+  position_std:  0.01    # [m]     small because we initialize from GT
+  velocity_std:  0.01    # [m/s]
+  attitude_std:  1.0e-4  # [rad]   ~0.006 deg
+  gyro_bias_std: 1.0e-6  # [rad/s] small because we initialize from GT
+  accel_bias_std: 1.0e-4 # [m/s^2]
