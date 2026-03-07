@@ -5,7 +5,7 @@
 **15-State Error-State Kalman Filter in C++17**
 
 Fuses IMU, GPS, and wheel odometry to estimate 6-DOF pose in real time.
-Built from scratch — no ROS, no frameworks, just Eigen and math.
+Built completely from scratch.
 
 <br>
 
@@ -32,7 +32,7 @@ Built from scratch — no ROS, no frameworks, just Eigen and math.
 </div>
 
 <details>
-<summary><b>📊 Position & Velocity Tracking</b></summary>
+<summary><b>Position & Velocity Tracking</b></summary>
 <br>
 
 <div align="center">
@@ -52,7 +52,7 @@ Built from scratch — no ROS, no frameworks, just Eigen and math.
 </details>
 
 <details>
-<summary><b>📉 Error Analysis with 3σ Bounds</b></summary>
+<summary><b>Error Analysis with 3σ Bounds</b></summary>
 <br>
 
 <div align="center">
@@ -66,7 +66,7 @@ Built from scratch — no ROS, no frameworks, just Eigen and math.
 </details>
 
 <details>
-<summary><b>🖥️ Terminal Output</b></summary>
+<summary><b>Terminal Output</b></summary>
 <br>
 
 ```
@@ -74,7 +74,6 @@ Built from scratch — no ROS, no frameworks, just Eigen and math.
   IMU samples processed:    36819
   GPS accepted/rejected:    1719 / 100
   Odom accepted/rejected:   1749 / 70
-  Output written to:        output/trajectory.csv
 
 ==========================================
     Position RMSE (over 36380 samples)
@@ -83,9 +82,6 @@ Built from scratch — no ROS, no frameworks, just Eigen and math.
   Y:    1.618 cm
   Z:    2.117 cm
   3D:   3.228 cm
-==========================================
-  [PASS] RMSE < 5 cm target achieved!
-==========================================
 ```
 
 </details>
