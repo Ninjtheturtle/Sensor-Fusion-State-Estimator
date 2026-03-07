@@ -76,6 +76,8 @@ def main():
     ax.set_title('EuRoC MH_01_easy - 3D Trajectory')
     ax.legend()
     plt.tight_layout()
+    fig.savefig('docs/images/3d_trajectory.png', dpi=150, bbox_inches='tight')
+    print('  Saved docs/images/3d_trajectory.png')
 
     # ── Figure 2: Position components over time ───────────────────────────────
     gt_interp = interpolate_gt(gt, est_t)
@@ -96,6 +98,8 @@ def main():
     axes[2].set_xlabel('Time [s]')
     fig2.suptitle('Position Components vs Time')
     plt.tight_layout()
+    fig2.savefig('docs/images/position_components.png', dpi=150, bbox_inches='tight')
+    print('  Saved docs/images/position_components.png')
 
     # ── Figure 3: Velocity estimate ───────────────────────────────────────────
     if est.shape[1] >= 11:
@@ -118,6 +122,8 @@ def main():
         axes[2].set_xlabel('Time [s]')
         fig3.suptitle('Velocity Components vs Time')
         plt.tight_layout()
+        fig3.savefig('docs/images/velocity_components.png', dpi=150, bbox_inches='tight')
+        print('  Saved docs/images/velocity_components.png')
 
     plt.show()
 

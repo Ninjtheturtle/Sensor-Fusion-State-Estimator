@@ -124,7 +124,9 @@ def main():
     fig.suptitle(f'ESKF Position Error (RMSE: {rmse_3d * 100:.2f} cm)\nEuRoC MH_01_easy')
     plt.tight_layout()
     plt.savefig('output/position_errors.png', dpi=150, bbox_inches='tight')
+    plt.savefig('docs/images/position_errors.png', dpi=150, bbox_inches='tight')
     print('  Plot saved to output/position_errors.png')
+    print('  Plot saved to docs/images/position_errors.png')
     plt.show()
 
 
