@@ -6,10 +6,9 @@
 
 using namespace eskf::io;
 
-// ── Helper: write a temporary CSV file ───────────────────────────────────────
+// helper: write a temp CSV file
 
 static std::string writeTempFile(const std::string& content) {
-    // Use a known temp path (portable for tests).
     const std::string path = "test_temp_csv.csv";
     std::ofstream f(path, std::ios::trunc);
     f << content;
@@ -17,10 +16,9 @@ static std::string writeTempFile(const std::string& content) {
     return path;
 }
 
-// ── IMU loader tests ──────────────────────────────────────────────────────────
+// IMU loader tests
 
 TEST(CsvLoader, LoadImuSkipsHeaderLines) {
-    // Lines starting with '#' must be skipped.
     const std::string csv =
         "#timestamp [ns],w_x,w_y,w_z,a_x,a_y,a_z\n"
         "1000000000,0.1,0.2,0.3,0.0,0.0,9.81\n"
@@ -34,7 +32,6 @@ TEST(CsvLoader, LoadImuSkipsHeaderLines) {
 }
 
 TEST(CsvLoader, LoadImuTimestampConversion) {
-    // Timestamps in ns must be converted to seconds.
     const std::string csv =
         "#header\n"
         "1500000000000,0.0,0.0,0.0,0.0,0.0,9.81\n";
@@ -48,7 +45,7 @@ TEST(CsvLoader, LoadImuTimestampConversion) {
 }
 
 TEST(CsvLoader, LoadImuColumnOrder) {
-    // EuRoC: columns are gyro (1-3) then accel (4-6).
+    // EuRoC column order: gyro first, then accel
     const std::string csv =
         "#ts,wx,wy,wz,ax,ay,az\n"
         "1000000000,1.0,2.0,3.0,4.0,5.0,6.0\n";
@@ -67,7 +64,7 @@ TEST(CsvLoader, LoadImuColumnOrder) {
 }
 
 TEST(CsvLoader, LoadImuHandlesCRLF) {
-    // Windows line endings (\r\n) must be handled.
+    // Windows CRLF should parse cleanly
     const std::string csv =
         "#header\r\n"
         "1000000000,0.0,0.0,0.0,0.0,0.0,9.81\r\n";
@@ -92,10 +89,9 @@ TEST(CsvLoader, LoadImuMissingFileThrows) {
                  std::runtime_error);
 }
 
-// ── Ground truth loader tests ─────────────────────────────────────────────────
+// ground truth loader tests
 
 TEST(CsvLoader, LoadGroundTruthColumnOrder) {
-    // EuRoC GT: timestamp, px, py, pz, qw, qx, qy, qz, vx, vy, vz, bgx, bgy, bgz, bax, bay, baz
     const std::string csv =
         "#ts,px,py,pz,qw,qx,qy,qz,vx,vy,vz,bgx,bgy,bgz,bax,bay,baz\n"
         "1000000000,1.0,2.0,3.0,1.0,0.0,0.0,0.0,4.0,5.0,6.0,0.1,0.2,0.3,0.4,0.5,0.6\n";
@@ -118,7 +114,7 @@ TEST(CsvLoader, LoadGroundTruthColumnOrder) {
 }
 
 TEST(CsvLoader, LoadGroundTruthQuaternionNormalized) {
-    // Non-unit quaternion in file should be normalized on load.
+    // non-unit quat in file should be normalized on load
     const std::string csv =
         "#ts,px,py,pz,qw,qx,qy,qz,vx,vy,vz,bgx,bgy,bgz,bax,bay,baz\n"
         "1000000000,0,0,0,2.0,0.0,0.0,0.0,0,0,0,0,0,0,0,0,0\n";

@@ -1,4 +1,2 @@
-// MahalanobisGate is header-only (template function).
-// This file exists to satisfy CMake's source list requirement.
-// The actual implementation is in include/utils/MahalanobisGate.hpp.
+// template impl is header-only; this file exists only for CMake's source list
 #include "utils/MahalanobisGate.hpp"

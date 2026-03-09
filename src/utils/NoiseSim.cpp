@@ -23,9 +23,7 @@ std::vector<GpsMeasurement> NoiseSim::generateGPS(
 
     std::vector<GpsMeasurement> result;
 
-    // Subsample from 200 Hz GT stream by computing skip interval.
-    // EuRoC GT is nominally 200 Hz (dt ≈ 0.005 s).
-    // Skip interval = round(200 / rate_hz).
+    // EuRoC GT is ~200 Hz, so subsample by rounding
     const double gt_rate_hz = 200.0;
     const int skip = static_cast<int>(std::round(gt_rate_hz / rate_hz));
     if (skip < 1) {

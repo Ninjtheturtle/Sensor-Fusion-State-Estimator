@@ -8,7 +8,7 @@
 
 using namespace eskf;
 
-// ── Helper: generate N steps of stationary IMU data ───────────────────────────
+// helper: stationary IMU (no motion)
 
 static std::vector<io::ImuMeasurement> makeStationaryImu(int N, double dt) {
     std::vector<io::ImuMeasurement> data;
@@ -22,7 +22,7 @@ static std::vector<io::ImuMeasurement> makeStationaryImu(int N, double dt) {
     return data;
 }
 
-// ── Initialization test ───────────────────────────────────────────────────────
+// initialization
 
 TEST(ESKFIntegration, InitializeSetsState) {
     ESKFConfig cfg;
@@ -43,7 +43,7 @@ TEST(ESKFIntegration, InitializeSetsState) {
     EXPECT_NEAR(filter.nominalState().q.norm(), 1.0, 1e-12);
 }
 
-// ── Stationary filter test ────────────────────────────────────────────────────
+// stationary filter
 
 TEST(ESKFIntegration, StationaryFilterDoesNotDriftFast) {
     ESKFConfig cfg;
@@ -53,17 +53,16 @@ TEST(ESKFIntegration, StationaryFilterDoesNotDriftFast) {
     CovMatrix    P0 = initCovariance(cfg);
     filter.initialize(x0, P0, 0.0);
 
-    // Run 1 second of stationary IMU.
     const auto imu_data = makeStationaryImu(200, 0.005);
     for (size_t i = 1; i < imu_data.size(); ++i) {
         filter.predictIMU(imu_data[i], 0.005);
     }
 
-    // Position should stay near origin (drift < 1mm for 1 second).
+    // drift < 1mm for 1s
     EXPECT_LT(filter.nominalState().p.norm(), 0.001);
 }
 
-// ── GPS convergence test ──────────────────────────────────────────────────────
+// GPS convergence
 
 TEST(ESKFIntegration, GpsUpdateConvergesPosition) {
     ESKFConfig cfg;
@@ -74,20 +73,19 @@ TEST(ESKFIntegration, GpsUpdateConvergesPosition) {
     P0 *= 100.0;  // large initial uncertainty
     filter.initialize(x0, P0, 0.0);
 
-    // Apply 10 GPS updates at the true position.
     utils::GpsMeasurement gps;
     gps.timestamp = 0.0;
-    gps.position  = Eigen::Vector3d::Zero();  // truth is at origin
+    gps.position  = Eigen::Vector3d::Zero();
 
     for (int i = 0; i < 10; ++i) {
         filter.updateGPS(gps);
     }
 
-    // After 10 updates, position estimate should converge to origin.
+    // should converge after 10 updates
     EXPECT_LT(filter.nominalState().p.norm(), 0.01);
 }
 
-// ── Outlier rejection statistics ──────────────────────────────────────────────
+// outlier rejection stats
 
 TEST(ESKFIntegration, OutlierCountsAreCorrect) {
     ESKFConfig cfg;
@@ -98,26 +96,23 @@ TEST(ESKFIntegration, OutlierCountsAreCorrect) {
     P0 *= 1e-6;  // very tight covariance -> large residuals rejected
     filter.initialize(x0, P0, 0.0);
 
-    // Good measurement (at origin = predicted position).
+    // zero residual — should be accepted
     utils::GpsMeasurement good_gps;
     good_gps.timestamp = 0.0;
     good_gps.position  = Eigen::Vector3d::Zero();
     filter.updateGPS(good_gps);
 
-    // Bad measurement (100m away with tiny covariance -> rejected).
     utils::GpsMeasurement bad_gps;
     bad_gps.timestamp = 0.0;
     bad_gps.position  = Eigen::Vector3d(100.0, 0.0, 0.0);
 
-    // Re-initialize with tight P for rejection test.
     filter.initialize(x0, P0 * 1e-6, 0.0);
     filter.updateGPS(bad_gps);
 
-    // The bad one should be rejected.
     EXPECT_EQ(filter.gpsRejected(), 1);
 }
 
-// ── Covariance is PD after full pipeline step ─────────────────────────────────
+// covariance stays PD after full predict + update cycle
 
 TEST(ESKFIntegration, CovarianceRemainsPositiveDefiniteAfterUpdates) {
     ESKFConfig cfg;
@@ -142,8 +137,6 @@ TEST(ESKFIntegration, CovarianceRemainsPositiveDefiniteAfterUpdates) {
     Eigen::SelfAdjointEigenSolver<CovMatrix> solver(filter.covariance());
     EXPECT_GT(solver.eigenvalues().minCoeff(), 0.0);
 }
-
-// ── Error state is zero after update ─────────────────────────────────────────
 
 TEST(ESKFIntegration, TimestampUpdatedAfterPredict) {
     ESKFConfig cfg;

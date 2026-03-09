@@ -19,7 +19,6 @@ void ESKF::initialize(const NominalState& x0, const CovMatrix& P0,
     timestamp_    = timestamp;
     initialized_  = true;
 
-    // Reset counters.
     gps_accepted_  = 0;
     gps_rejected_  = 0;
     odom_accepted_ = 0;
@@ -29,7 +28,7 @@ void ESKF::initialize(const NominalState& x0, const CovMatrix& P0,
 void ESKF::predictIMU(const io::ImuMeasurement& imu, double dt)
 {
     if (!initialized_) return;
-    if (dt <= 0.0 || dt > 0.5) return;  // sanity check (0.5s max gap)
+    if (dt <= 0.0 || dt > 0.5) return;  // 0.5s max gap
 
     imuPredictor_.predict(x_, P_, imu, dt);
     timestamp_ = imu.timestamp;
@@ -63,9 +62,8 @@ bool ESKF::updateOdometry(const utils::OdomMeasurement& odom)
 
 void ESKF::injectAndReset()
 {
-    // Note: inject-and-reset is called internally by GpsUpdater and OdomUpdater
-    // after each accepted measurement. This method is provided for external use
-    // if needed (e.g., after fusing multiple measurements in one step).
+    // called internally by updaters after each accepted measurement
+    // exposed here in case we ever want to fuse multiple at once
     x_.p   += dx_.dp();
     x_.v   += dx_.dv();
     x_.q    = utils::applyRotVecRight(x_.q, dx_.dtheta());

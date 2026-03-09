@@ -12,17 +12,17 @@ static utils::GpsMeasurement makeGps(const Eigen::Vector3d& pos) {
     return m;
 }
 
-// ── Acceptance / rejection tests ──────────────────────────────────────────────
+// acceptance / rejection
 
 TEST(GpsUpdater, PerfectMeasurementAccepted) {
     ESKFConfig cfg;
     GpsUpdater updater(cfg);
 
-    NominalState x;  // position at origin
+    NominalState x;
     ErrorState   dx;
     CovMatrix    P = initCovariance(cfg);
 
-    // GPS exactly matches predicted position -> zero residual -> always accepted.
+    // zero residual — always accepted
     const auto gps = makeGps(x.p);
     EXPECT_TRUE(updater.update(x, dx, P, gps));
 }
@@ -34,15 +34,14 @@ TEST(GpsUpdater, LargeOutlierRejected) {
     NominalState x;
     ErrorState   dx;
     CovMatrix    P = initCovariance(cfg);
-    // Make P tiny so Mahalanobis distance of large residual is huge.
+    // tiny P means huge Mahalanobis distance
     P *= 1e-6;
 
-    // 100m offset with tiny covariance -> massive d^2 -> rejected.
     const auto gps = makeGps(Eigen::Vector3d(100.0, 0.0, 0.0));
     EXPECT_FALSE(updater.update(x, dx, P, gps));
 }
 
-// ── Covariance reduction ──────────────────────────────────────────────────────
+// covariance reduction
 
 TEST(GpsUpdater, CovarianceReducedAfterUpdate) {
     ESKFConfig cfg;
@@ -52,7 +51,7 @@ TEST(GpsUpdater, CovarianceReducedAfterUpdate) {
     ErrorState   dx;
     CovMatrix    P = initCovariance(cfg);
 
-    // Inflate initial covariance so update has a meaningful effect.
+    // inflate so update has a meaningful effect
     P *= 100.0;
     const double trace_before = P.trace();
 
@@ -62,7 +61,7 @@ TEST(GpsUpdater, CovarianceReducedAfterUpdate) {
     EXPECT_LT(P.trace(), trace_before);
 }
 
-// ── Post-update properties ────────────────────────────────────────────────────
+// post-update properties
 
 TEST(GpsUpdater, CovarianceSymmetricAfterUpdate) {
     ESKFConfig cfg;
@@ -79,7 +78,6 @@ TEST(GpsUpdater, CovarianceSymmetricAfterUpdate) {
 }
 
 TEST(GpsUpdater, ErrorStateZeroAfterInject) {
-    // After update, injectAndReset() should zero dx.delta.
     ESKFConfig cfg;
     GpsUpdater updater(cfg);
 
@@ -95,22 +93,19 @@ TEST(GpsUpdater, ErrorStateZeroAfterInject) {
 }
 
 TEST(GpsUpdater, PositionMovesTowardMeasurement) {
-    // After update, estimated position should move toward GPS measurement.
     ESKFConfig cfg;
     GpsUpdater updater(cfg);
 
-    NominalState x;  // position at [0,0,0]
+    NominalState x;
     ErrorState   dx;
     CovMatrix    P = initCovariance(cfg);
-    P *= 1000.0;  // large uncertainty -> strong update
+    P *= 1000.0;  // strong update
 
-    // Use a small offset (0.1m) so Mahalanobis d² ≈ 0.098 << 7.815 threshold.
-    // A 1m offset with this P gives d² ≈ 9.76 which is correctly rejected.
+    // small offset so d² << threshold; 1m would get rejected here
     const Eigen::Vector3d gps_pos(0.1, 0.0, 0.0);
     const auto gps = makeGps(gps_pos);
     updater.update(x, dx, P, gps);
 
-    // x.p should be between 0 and gps_pos (Kalman convex combination).
     EXPECT_GT(x.p.x(), 0.0);
     EXPECT_LT(x.p.x(), 0.1);
 }

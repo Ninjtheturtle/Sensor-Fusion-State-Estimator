@@ -7,7 +7,7 @@ using namespace eskf::utils;
 
 static constexpr double kTol = 1e-9;
 
-// ── Basic gate tests ──────────────────────────────────────────────────────────
+// basic gate tests
 
 TEST(MahalanobisGate, ZeroResidualAlwaysAccepted) {
     const Eigen::Vector3d r = Eigen::Vector3d::Zero();
@@ -73,10 +73,10 @@ TEST(MahalanobisGate, DiagonalCovariance) {
     EXPECT_NEAR(d2, 3.0, 1e-9);
 }
 
-// ── Chi-squared threshold sanity ──────────────────────────────────────────────
+// chi2 threshold sanity
 
 TEST(ChiSquaredThreshold, Dof3IsCorrect) {
-    // chi^2(3, 0.05) = 7.815 (standard table value)
+    // chi^2(3, 0.05) = 7.815
     EXPECT_NEAR(ChiSquaredThreshold::kDof3, 7.815, 0.001);
 }
 

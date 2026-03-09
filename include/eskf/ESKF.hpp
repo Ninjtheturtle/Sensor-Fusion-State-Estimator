@@ -9,42 +9,27 @@
 
 namespace eskf {
 
-// Main ESKF (Error-State Extended Kalman Filter) orchestrator.
-//
-// Maintains:
-//   x_  — nominal state (position, velocity, quaternion, biases)
-//   dx_ — error state (corrections accumulated since last reset)
-//   P_  — error state covariance (15x15)
-//
-// Workflow:
-//   1. initialize() — set x_, P_ from ground truth
-//   2. predictIMU() — propagate forward with each IMU measurement
-//   3. updateGPS() / updateOdometry() — correct with measurements
-//   4. Each update calls injectAndReset() internally
+// top-level ESKF orchestrator — owns nominal state, error state, and covariance
+// call initialize() once, then predictIMU() + updateGPS()/updateOdometry() in a loop
 class ESKF {
 public:
     explicit ESKF(const ESKFConfig& config = ESKFConfig{});
 
-    // Initialize the filter from known state and covariance.
-    // Called once with the first ground truth entry.
+    // call once with the first GT entry
     void initialize(const NominalState& x0, const CovMatrix& P0,
                     double timestamp = 0.0);
 
-    // Propagate the nominal state and covariance forward by dt seconds.
     void predictIMU(const io::ImuMeasurement& imu, double dt);
 
-    // Attempt a GPS position update. Returns true if accepted.
+    // returns true if accepted (passed Mahalanobis gate)
     bool updateGPS(const utils::GpsMeasurement& gps);
 
-    // Attempt an odometry velocity update. Returns true if accepted.
     bool updateOdometry(const utils::OdomMeasurement& odom);
 
-    // ── Accessors ─────────────────────────────────────────────────────────────
     const NominalState& nominalState() const { return x_; }
     const CovMatrix&    covariance()   const { return P_; }
     double              timestamp()    const { return timestamp_; }
 
-    // Statistics for diagnostics.
     int gpsAccepted()  const { return gps_accepted_;  }
     int gpsRejected()  const { return gps_rejected_;  }
     int odomAccepted() const { return odom_accepted_; }
@@ -62,14 +47,12 @@ private:
     GpsUpdater    gpsUpdater_;
     OdomUpdater   odomUpdater_;
 
-    // Rejection counters for diagnostics.
     int gps_accepted_  = 0;
     int gps_rejected_  = 0;
     int odom_accepted_ = 0;
     int odom_rejected_ = 0;
 
-    // Fold the error state dx_ into the nominal state x_ and zero dx_.
-    // Called by GpsUpdater and OdomUpdater after each accepted measurement.
+    // fold dx_ into x_, then zero dx_
     void injectAndReset();
 };
 

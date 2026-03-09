@@ -11,8 +11,6 @@
 #include <stdexcept>
 #include <iomanip>
 
-// ── Command-line argument parsing ─────────────────────────────────────────────
-
 struct Args {
     std::string imu_path;
     std::string gt_path;
@@ -45,10 +43,7 @@ static Args parseArgs(int argc, char* argv[]) {
     return args;
 }
 
-// ── RMSE computation ──────────────────────────────────────────────────────────
-
-// Linearly interpolate a ground truth entry at the given timestamp.
-// gt must be sorted by timestamp. Returns false if timestamp is out of range.
+// linear interp of GT at time t; returns false if out of range
 static bool interpolateGT(const std::vector<eskf::io::GroundTruthEntry>& gt,
                            double t,
                            Eigen::Vector3d& p_out)
@@ -56,7 +51,6 @@ static bool interpolateGT(const std::vector<eskf::io::GroundTruthEntry>& gt,
     if (gt.empty()) return false;
     if (t < gt.front().timestamp || t > gt.back().timestamp) return false;
 
-    // Binary search for the bracketing interval.
     auto it = std::lower_bound(gt.begin(), gt.end(), t,
         [](const eskf::io::GroundTruthEntry& e, double ts) {
             return e.timestamp < ts;
@@ -135,7 +129,6 @@ int main(int argc, char* argv[]) {
     }
 
     try {
-        // ── Load data ──────────────────────────────────────────────────────────
         std::cout << "[INFO] Loading IMU data from:          " << args.imu_path << "\n";
         const auto imu_data = eskf::io::CsvLoader::loadIMU(args.imu_path);
         std::cout << "[INFO]   Loaded " << imu_data.size() << " IMU samples\n";
@@ -148,7 +141,7 @@ int main(int argc, char* argv[]) {
             throw std::runtime_error("Insufficient data loaded.");
         }
 
-        // ── Generate simulated GPS and odometry ───────────────────────────────
+        // simulate GPS and odom from GT
         eskf::ESKFConfig config;  // uses default parameters for EuRoC MH_01_easy
         eskf::utils::NoiseSim noise_sim(42);
 
@@ -162,7 +155,6 @@ int main(int argc, char* argv[]) {
             gt_data, config.odom_rate_hz, config.sigma_odom);
         std::cout << "[INFO]   Generated " << odom_data.size() << " odom samples\n";
 
-        // ── Initialize ESKF from first ground truth entry ─────────────────────
         eskf::NominalState x0;
         x0.p   = gt_data[0].p;
         x0.v   = gt_data[0].v;
@@ -172,12 +164,8 @@ int main(int argc, char* argv[]) {
 
         const eskf::CovMatrix P0 = eskf::initCovariance(config);
 
-        // In EuRoC, IMU starts ~1 s before the ground truth (and hence GPS).
-        // Initializing at imu_data[0] with a state valid at gt_data[0].timestamp
-        // causes dead-reckoning from the wrong starting point: the integrated
-        // velocity drifts the position ~1 m before the first GPS arrives,
-        // making all GPS measurements fail the Mahalanobis gate.
-        // Fix: skip IMU samples before the first GT entry and initialize there.
+        // IMU starts ~1s before GT — if we initialize at imu_data[0] the position drifts ~1m
+        // before the first GPS arrives, killing the Mahalanobis gate. skip to first GT timestamp.
         size_t imu_start = 0;
         while (imu_start < imu_data.size() &&
                imu_data[imu_start].timestamp < gt_data[0].timestamp) {
@@ -195,12 +183,10 @@ int main(int argc, char* argv[]) {
         eskf::ESKF filter(config);
         filter.initialize(x0, P0, imu_data[imu_start].timestamp);
 
-        // ── Open output file ──────────────────────────────────────────────────
         std::cout << "[INFO] Writing output to:              " << args.out_path << "\n\n";
         eskf::io::ResultWriter writer(args.out_path);
 
-        // ── Main fusion loop ──────────────────────────────────────────────────
-        // Skip GPS/odom that precede the filter start time.
+        // skip GPS/odom before filter start
         size_t gps_idx  = 0;
         size_t odom_idx = 0;
         while (gps_idx  < gps_data.size()  &&
@@ -214,13 +200,11 @@ int main(int argc, char* argv[]) {
         for (size_t i = imu_start + 1; i < imu_data.size(); ++i) {
             const double dt = imu_data[i].timestamp - imu_data[i-1].timestamp;
 
-            // Sanity check: skip if dt is nonsensical.
+            // bad dt — skip
             if (dt <= 0.0 || dt > 0.1) continue;
 
-            // IMU prediction step.
             filter.predictIMU(imu_data[i], dt);
 
-            // GPS update: process all GPS measurements up to current time.
             while (gps_idx < gps_data.size() &&
                    gps_data[gps_idx].timestamp <= imu_data[i].timestamp)
             {
@@ -228,7 +212,6 @@ int main(int argc, char* argv[]) {
                 ++gps_idx;
             }
 
-            // Odometry update: process all odom measurements up to current time.
             while (odom_idx < odom_data.size() &&
                    odom_data[odom_idx].timestamp <= imu_data[i].timestamp)
             {
@@ -236,7 +219,6 @@ int main(int argc, char* argv[]) {
                 ++odom_idx;
             }
 
-            // Log state to CSV.
             if (i % log_every == 0) {
                 const auto& x = filter.nominalState();
                 const auto& P = filter.covariance();
@@ -252,7 +234,6 @@ int main(int argc, char* argv[]) {
                 writer.write(entry);
             }
 
-            // Progress indicator every 10 seconds of data.
             if (i % 2000 == 0) {
                 const double t_elapsed = imu_data[i].timestamp - imu_data[0].timestamp;
                 std::cout << "  t = " << std::fixed << std::setprecision(1)
@@ -265,7 +246,6 @@ int main(int argc, char* argv[]) {
             }
         }
 
-        // ── Print final statistics ────────────────────────────────────────────
         std::cout << "\n[INFO] Fusion complete.\n"
                   << "  IMU samples processed:   " << imu_data.size() - 1 << "\n"
                   << "  GPS accepted/rejected:   "
@@ -274,7 +254,6 @@ int main(int argc, char* argv[]) {
                   << filter.odomAccepted() << " / " << filter.odomRejected() << "\n"
                   << "  Output written to:       " << args.out_path << "\n";
 
-        // ── Compute and print RMSE ────────────────────────────────────────────
         computeAndPrintRMSE(writer.entries(), gt_data);
 
         std::cout << "[INFO] To visualize:\n"

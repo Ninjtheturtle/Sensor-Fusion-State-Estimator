@@ -19,13 +19,12 @@ Eigen::Matrix3d quatToRot(const Eigen::Quaterniond& q) {
 Eigen::Quaterniond rotVecToQuat(const Eigen::Vector3d& dtheta) {
     const double angle = dtheta.norm();
 
-    // Threshold below which we use small-angle approximation to avoid
-    // division by near-zero sin(angle/2) / angle.
+    // below this, sin(angle/2)/angle blows up — use first-order Taylor instead
     const double kEps = 1e-10;
 
     double w, x, y, z;
     if (angle < kEps) {
-        // First-order Taylor expansion: q ≈ [1, dtheta/2]
+        // q ≈ [1, dtheta/2]
         w = 1.0;
         x = 0.5 * dtheta.x();
         y = 0.5 * dtheta.y();
@@ -44,18 +43,17 @@ Eigen::Quaterniond rotVecToQuat(const Eigen::Vector3d& dtheta) {
 }
 
 Eigen::Vector3d quatToRotVec(const Eigen::Quaterniond& q_in) {
-    // Ensure q.w >= 0 to pick the principal value (angle in [0, pi]).
+    // negate if w < 0 so we get the principal value (angle in [0, pi])
     Eigen::Quaterniond q = q_in.normalized();
     if (q.w() < 0.0) {
-        q.coeffs() = -q.coeffs(); // q and -q represent the same rotation
+        q.coeffs() = -q.coeffs();  // q and -q are the same rotation
     }
 
     const double kEps = 1e-10;
     const double vec_norm = q.vec().norm();
 
     if (vec_norm < kEps) {
-        // Near identity: angle -> 0, use Taylor expansion to avoid 0/0.
-        // asin(x) ≈ x for small x, so theta ≈ 2 * vec_norm
+        // near identity — asin(x) ≈ x avoids 0/0
         return 2.0 * q.vec();
     }
 
@@ -65,8 +63,7 @@ Eigen::Vector3d quatToRotVec(const Eigen::Quaterniond& q_in) {
 
 Eigen::Quaterniond applyRotVecRight(const Eigen::Quaterniond& q,
                                      const Eigen::Vector3d& dtheta) {
-    // Right-multiply: q_new = q * dq, where dq represents the body-frame error.
-    // This is the correct formulation for the ESKF attitude inject-and-reset.
+    // right-multiply body-frame error — correct for ESKF inject-and-reset
     Eigen::Quaterniond dq = rotVecToQuat(dtheta);
     return (q * dq).normalized();
 }

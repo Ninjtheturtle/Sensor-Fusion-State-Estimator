@@ -10,7 +10,6 @@ ResultWriter::ResultWriter(const std::string& path) {
     if (!file_.is_open()) {
         throw std::runtime_error("ResultWriter: cannot open output file: " + path);
     }
-    // Write CSV header
     file_ << "timestamp_s,"
           << "est_px,est_py,est_pz,"
           << "est_qw,est_qx,est_qy,est_qz,"

@@ -8,7 +8,7 @@ using namespace eskf::utils;
 static constexpr double kTol = 1e-9;
 static constexpr double kLooseTol = 1e-6;
 
-// ── skew() tests ──────────────────────────────────────────────────────────────
+// skew() tests
 
 TEST(SkewMatrix, IsAntisymmetric) {
     const Eigen::Vector3d v(1.0, 2.0, 3.0);
@@ -18,7 +18,7 @@ TEST(SkewMatrix, IsAntisymmetric) {
 
 TEST(SkewMatrix, SkewTimesVecIsZero) {
     const Eigen::Vector3d v(1.0, -2.0, 3.0);
-    // skew(v) * v == v.cross(v) == 0 (standard property of cross product)
+    // skew(v) * v == 0 always
     EXPECT_LT((skew(v) * v).norm(), kTol);
 }
 
@@ -29,7 +29,7 @@ TEST(SkewMatrix, CrossProductProperty) {
     EXPECT_LT((skew(a) * b - a.cross(b)).norm(), kTol);
 }
 
-// ── quatToRot() tests ─────────────────────────────────────────────────────────
+// quatToRot() tests
 
 TEST(QuatToRot, IdentityGivesI3) {
     const Eigen::Quaterniond q = Eigen::Quaterniond::Identity();
@@ -59,7 +59,7 @@ TEST(QuatToRot, MatchesEigenMethod) {
     EXPECT_LT((R1 - R2).norm(), kTol);
 }
 
-// ── rotVecToQuat() tests ──────────────────────────────────────────────────────
+// rotVecToQuat() tests
 
 TEST(RotVecToQuat, ZeroVectorGivesIdentity) {
     const Eigen::Vector3d zero = Eigen::Vector3d::Zero();
@@ -85,7 +85,7 @@ TEST(RotVecToQuat, Pi_X_Rotation) {
 }
 
 TEST(RotVecToQuat, NumericalStabilityNearZero) {
-    // Test very small rotation vectors (exercises Taylor expansion branch)
+    // exercises the Taylor expansion branch
     const Eigen::Vector3d v(1e-12, 0.0, 0.0);
     const Eigen::Quaterniond q = rotVecToQuat(v);
     EXPECT_TRUE(std::isfinite(q.w()));
@@ -93,7 +93,7 @@ TEST(RotVecToQuat, NumericalStabilityNearZero) {
     EXPECT_NEAR(q.norm(), 1.0, kTol);
 }
 
-// ── quatToRotVec() roundtrip tests ────────────────────────────────────────────
+// quatToRotVec() roundtrip
 
 TEST(QuatToRotVec, RoundtripSmallAngle) {
     const Eigen::Vector3d v_in(0.01, -0.02, 0.03);
@@ -117,7 +117,7 @@ TEST(QuatToRotVec, NearIdentityStable) {
     EXPECT_TRUE(std::isfinite(v.z()));
 }
 
-// ── applyRotVecRight() tests ──────────────────────────────────────────────────
+// applyRotVecRight() tests
 
 TEST(ApplyRotVecRight, ZeroErrorPreservesQuaternion) {
     const Eigen::Quaterniond q(

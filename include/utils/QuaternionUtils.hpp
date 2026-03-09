@@ -6,28 +6,20 @@
 namespace eskf {
 namespace utils {
 
-// Returns the 3x3 skew-symmetric (cross-product) matrix of a 3-vector.
 // skew(v) * u == v.cross(u)
 Eigen::Matrix3d skew(const Eigen::Vector3d& v);
 
-// Convert a unit quaternion to its 3x3 rotation matrix.
-// Equivalent to q.toRotationMatrix() but explicit.
+// same as q.toRotationMatrix() but explicit
 Eigen::Matrix3d quatToRot(const Eigen::Quaterniond& q);
 
-// Convert a small rotation vector (axis-angle) to a unit quaternion.
-// For |dtheta| -> 0, returns identity quaternion.
-// Formula: q = [cos(|dtheta|/2), sin(|dtheta|/2) * dtheta / |dtheta|]
-// For small angles: q ≈ [1, dtheta/2].normalized()
+// axis-angle vector -> unit quaternion; handles near-zero via Taylor expansion
 Eigen::Quaterniond rotVecToQuat(const Eigen::Vector3d& dtheta);
 
-// Convert a unit quaternion to a rotation vector (axis-angle, principal value).
-// Inverse of rotVecToQuat. Handles q.w < 0 by negating q first.
-// For q near identity, uses Taylor expansion to avoid division by zero.
+// inverse of rotVecToQuat; negates q if w < 0 to get principal value
 Eigen::Vector3d quatToRotVec(const Eigen::Quaterniond& q);
 
-// Apply a small rotation error (right-multiply) to a quaternion.
-// Result: q_new = (q * rotVecToQuat(dtheta)).normalized()
-// Used in the ESKF inject-and-reset step for attitude correction.
+// right-multiply attitude error: q_new = (q * rotVecToQuat(dtheta)).normalized()
+// used in ESKF inject-and-reset
 Eigen::Quaterniond applyRotVecRight(const Eigen::Quaterniond& q,
                                     const Eigen::Vector3d& dtheta);
 
