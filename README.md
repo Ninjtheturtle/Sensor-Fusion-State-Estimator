@@ -4,7 +4,7 @@
 
 **15-State Error-State Kalman Filter in C++17**
 
-Fuses IMU, GPS, and wheel odometry to estimate 6-DOF pose in real time.
+Fuses IMU with simulated GPS and odometry corrections to estimate 6-DOF pose.
 Built completely from scratch.
 
 <br>
@@ -102,7 +102,7 @@ Error = [δp, δv, δθ, δb_g, δb_a] ∈ ℝ¹⁵   ← lives in the tangent s
 
 **Prediction** — IMU at 200 Hz drives the state forward using **RK4 integration**. The quaternion is propagated on-manifold and renormalized every step.
 
-**Update** — GPS and odometry corrections arrive at 10 Hz. Each measurement passes a **Mahalanobis χ² gate** (95th percentile, 3-DOF) before being fused. Outliers are rejected automatically.
+**Update** — GPS and odometry corrections arrive at 10 Hz (simulated from ground truth with Gaussian noise — EuRoC has no real GPS or odometry). Each measurement passes a **Mahalanobis χ² gate** (95th percentile, 3-DOF) before being fused. Outliers are rejected automatically.
 
 **Stability** — Covariance is updated using the **Joseph form** (`P = (I−KH)P(I−KH)ᵀ + KRKᵀ`), which guarantees symmetry and positive-definiteness even under numerical noise.
 
@@ -110,11 +110,12 @@ Error = [δp, δv, δθ, δb_g, δb_a] ∈ ℝ¹⁵   ← lives in the tangent s
 ┌─────────────┐     ┌──────────────┐     ┌────────────────────┐
 │  IMU 200 Hz │────▸│              │────▸│  6-DOF Pose        │
 ├─────────────┤     │  ESKF Core   │     │  + IMU Biases      │
-│  GPS  10 Hz │────▸│  (15-state)  │     │  + Covariance (P)  │
+│  GPS* 10 Hz │────▸│  (15-state)  │     │  + Covariance (P)  │
 ├─────────────┤     │              │     │                    │
-│  Odom 10 Hz │────▸│              │     │  → trajectory.csv  │
+│ Odom* 10 Hz │────▸│              │     │  → trajectory.csv  │
 └─────────────┘     └──────────────┘     └────────────────────┘
 ```
+*\* GPS and odometry are simulated from ground truth — EuRoC provides neither.*
 
 ---
 
